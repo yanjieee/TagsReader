@@ -125,6 +125,32 @@ namespace TagsReader
                         }
                     }
                 }
+                else if(file.Name.Contains(".txt"))
+                {
+                    String html = file.OpenText().ReadToEnd();
+                    String tags = GetMid(html, "AppNexus Console Placement Information", "");
+                    String company = textBox1.Text;
+                    if (tags.Length > 0)
+                    {
+                        String refer = "http://" + GetMid(tags, "Placement Group: ", "\r\n");
+                        //Regex urlRegex = new Regex(@"((http|https)://)?(www.)?[a-z0-9\.]+(\.(com|net|cn|com\.cn|com\.net|net\.cn))(/[^\s\n]*)?");
+                        //Match match = urlRegex.Match(refer);
+                        //refer = match.Value;
+                        String oneTag = GetMid(tags, "SCRIPT SRC=", "TYPE=");
+                        tags = GetMid(tags, oneTag, "");
+                        oneTag = trimTag(oneTag);
+                        while (!String.IsNullOrEmpty(oneTag))
+                        {
+                            String host = GetMid(oneTag, "http://", "/");
+                            String code = GetMid(oneTag, host, "\"");
+                            sql.CommandText = "INSERT INTO Account(host,code,refer,thread,company) VALUES ('" + host + "','" + code + "','" + refer + "',1,'" + company + "')";
+                            sql.ExecuteNonQuery();
+                            oneTag = GetMid(tags, "SCRIPT SRC=", "TYPE=");
+                            tags = GetMid(tags, oneTag, "");
+                            oneTag = trimTag(oneTag);
+                        }
+                    }
+                }
             }
         }
     }
